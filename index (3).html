@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ongga App</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/htm@3.1.1/dist/htm.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Inter Tight', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        .lucide {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            stroke-width: 2;
+            stroke: currentColor;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .sticky-col {
+            position: sticky;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body className="font-sans">
+    <div id="root"></div>
+
+    <script>
+    const html = htm.bind(React.createElement);
+    const { useState, useEffect, useCallback, useMemo, Fragment } = React;
+
+    /* ========== ICONS ========== */
+    const Calculator = () => html`<svg className="lucide" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2" /><line x1="8" y1="6" x2="16" y2="6" /><line x1="8" y1="10" x2="16" y2="10" /><line x1="8" y1="14" x2="16" y2="14" /><line x1="8" y1="18" x2="16" y2="18" /></svg>`;
+    const Download = () => html`<svg className="lucide" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>`;
+    const Upload = () => html`<svg className="lucide" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>`;
+    const RotateCcw = () => html`<svg className="lucide" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" /></svg>`;
+    const Info = () => html`<svg className="lucide" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></svg>`;
+    const Plus = () => html`<svg className="lucide" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>`;
+    const Minus = () => html`<svg className="lucide" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12" /></svg>`;
+
+    /* ========== LOGIN PAGE ========== */
+    function LoginPage({ onLogin }) {
+        const [password, setPassword] = useState('');
+        const [error, setError] = useState('');
+
+        const handleSubmit = (e) => {
+            e.preventDefault();
+            if (password === '12345') {
+                onLogin();
+            } else {
+                setError('Password salah. Silakan coba lagi.');
+            }
+        };
+
+        return html`
+            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col justify-between p-4">
+                <div className="flex-grow flex items-center justify-center">
+                    <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+                        <div className="flex justify-center mb-6">
+                            <div className="bg-indigo-600 p-4 rounded-full">
+                                <${Calculator} />
+                            </div>
+                        </div>
+                        <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">Ongga App</h1>
+                        <form onSubmit=${handleSubmit} className="space-y-6">
+                            <div>
+                                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                                <input id="password" type="password" value=${password} onInput=${(e) => setPassword(e.target.value)}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                    placeholder="Masukkan password" required />
+                            </div>
+                            ${error && html`<p className="text-red-500 text-sm text-center">${error}</p>`}
+                            <button type="submit" className="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors">Masuk ke Aplikasi</button>
+                        </form>
+                    </div>
+                </div>
+                <footer className="text-center text-sm text-gray-600 py-4">
+                    @2025 Pengembang <strong><a href="https://agungjnugraha.github.io/portofolio" target="_blank" rel="noopener noreferrer" title="ajnugraha app" className="text-indigo-600 hover:underline">AJ Nugraha</a></strong>
+                </footer>
+            </div>
+        `;
+    }
+
+    /* ========== APP CONTENT ========== */
+    function AppContent() {
+        const [jumlahKolom, setJumlahKolom] = useState(3);
+        const [maxNilai, setMaxNilai] = useState(100);
+        const [kkm, setKkm] = useState(75);
+        const [copyButtonText, setCopyButtonText] = useState('Salin Nilai');
+
+        const makeEmptySiswa = (cols) => ({
+            noAbsen: 0,
+            nilaiAsli: Array(cols).fill(''),
+            nilaiKonvert: Array(cols).fill('')
+        });
+
+        const [dataSiswa, setDataSiswa] = useState(() => {
+            return Array.from({ length: 40 }, (_, i) => {
+                const s = makeEmptySiswa(3);
+                s.noAbsen = i + 1;
+                return s;
+            });
+        });
+
+        const [kolomStats, setKolomStats] = useState(() => {
+            return Array.from({ length: 3 }, () => ({ min: null, max: null }));
+        });
+
+        const hitungKolomStats = useCallback((data) => {
+            return Array.from({ length: jumlahKolom }, (_, colIndex) => {
+                const values = data
+                    .map(row => parseFloat(row.nilaiAsli[colIndex]))
+                    .filter(val => !isNaN(val) && val > 0);
+                if (values.length === 0) return { min: null, max: null };
+                return { min: Math.min(...values), max: Math.max(...values) };
+            });
+        }, [jumlahKolom]);
+
+        useEffect(() => {
+            setKolomStats(hitungKolomStats(dataSiswa));
+        }, [dataSiswa, hitungKolomStats]);
+
+        const konversiNilai = useCallback((nilaiAsli, colIndex) => {
+            if (nilaiAsli === '' || nilaiAsli === 0) return 0;
+            const num = parseFloat(nilaiAsli);
+            if (isNaN(num)) return 0;
+            const stats = kolomStats[colIndex];
+            if (!stats || stats.min === null || stats.max === null) return 0;
+            if (num <= stats.min) return kkm;
+            if (num >= stats.max) return maxNilai;
+            const nilai = kkm + ((num - stats.min) / (stats.max - stats.min)) * (maxNilai - kkm);
+            return Math.round(nilai);
+        }, [maxNilai, kkm, kolomStats]);
+
+        useEffect(() => {
+            setDataSiswa(prevData =>
+                prevData.map(siswa => {
+                    const currentLength = siswa.nilaiAsli.length;
+                    if (jumlahKolom > currentLength) {
+                        const diff = jumlahKolom - currentLength;
+                        return {
+                            ...siswa,
+                            nilaiAsli: [...siswa.nilaiAsli, ...Array(diff).fill('')],
+                            nilaiKonvert: [...siswa.nilaiKonvert, ...Array(diff).fill(0)]
+                        };
+                    } else if (jumlahKolom < currentLength) {
+                        return {
+                            ...siswa,
+                            nilaiAsli: siswa.nilaiAsli.slice(0, jumlahKolom),
+                            nilaiKonvert: siswa.nilaiKonvert.slice(0, jumlahKolom)
+                        };
+                    }
+                    return siswa;
+                })
+            );
+        }, [jumlahKolom]);
+
+        useEffect(() => {
+            setDataSiswa(prevData =>
+                prevData.map(siswa => ({
+                    ...siswa,
+                    nilaiKonvert: siswa.nilaiAsli.map((nilai, colIndex) => konversiNilai(nilai, colIndex))
+                }))
+            );
+        }, [maxNilai, kkm, konversiNilai, jumlahKolom]);
+
+        const studentRanks = useMemo(() => {
+            const studentsWithAverage = dataSiswa.map((siswa, index) => {
+                const validNilai = siswa.nilaiKonvert.filter(n => n > 0);
+                let avg = 0;
+                if (validNilai.length > 0) avg = validNilai.reduce((a, b) => a + b, 0) / validNilai.length;
+                return { index, average: avg };
+            });
+
+            const validStudents = studentsWithAverage.filter(s => s.average > 0);
+            const ranksMap = new Map();
+
+            const sortedHighest = [...validStudents].sort((a, b) => b.average - a.average);
+            sortedHighest.slice(0, 5).forEach((student, rank) => {
+                ranksMap.set(student.index, { group: 'top5', rank: rank + 1 });
+            });
+            sortedHighest.slice(5, 10).forEach((student, rank) => {
+                ranksMap.set(student.index, { group: 'next5', rank: rank + 1 });
+            });
+
+            const sortedLowest = [...validStudents].sort((a, b) => a.average - b.average);
+            sortedLowest.slice(0, 5).forEach((student, rank) => {
+                ranksMap.set(student.index, { group: 'bottom5', rank: rank + 1 });
+            });
+
+            return ranksMap;
+        }, [dataSiswa, jumlahKolom]);
+
+        const handleNilaiAsliChange = (rowIndex, colIndex, value) => {
+            const newData = [...dataSiswa];
+            newData[rowIndex].nilaiAsli[colIndex] = value;
+            newData[rowIndex].nilaiKonvert[colIndex] = konversiNilai(value, colIndex);
+            setDataSiswa(newData);
+        };
+
+        const handlePaste = (e, rowIndex, colIndex) => {
+            e.preventDefault();
+            const pastedData = e.clipboardData.getData('text');
+            const rows = pastedData.split('\n').filter(row => row.trim());
+            const newData = [...dataSiswa];
+
+            rows.forEach((row, rowOffset) => {
+                const values = row.split('\t');
+                const targetRow = rowIndex + rowOffset;
+                if (targetRow < newData.length) {
+                    values.forEach((value, colOffset) => {
+                        const targetCol = colIndex + colOffset;
+                        if (targetCol < jumlahKolom) {
+                            newData[targetRow].nilaiAsli[targetCol] = value.trim();
+                            newData[targetRow].nilaiKonvert[targetCol] = konversiNilai(value.trim(), targetCol);
+                        }
+                    });
+                }
+            });
+            setDataSiswa(newData);
+        };
+
+        const resetData = () => {
+            setDataSiswa(Array.from({ length: 40 }, (_, i) => {
+                const s = makeEmptySiswa(3);
+                s.noAbsen = i + 1;
+                return s;
+            }));
+            setMaxNilai(100);
+            setKkm(75);
+            setJumlahKolom(3);
+        };
+
+        const salinNilaiKonvert = () => {
+            let textToCopy = '';
+            const studentsWithData = dataSiswa.filter(siswa => siswa.nilaiKonvert.some(n => n > 0));
+            studentsWithData.forEach(siswa => {
+                textToCopy += siswa.nilaiKonvert.join('\t') + '\n';
+            });
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    setCopyButtonText('Tersalin!');
+                    setTimeout(() => setCopyButtonText('Salin Nilai'), 2000);
+                }).catch(() => alert('Gagal menyalin data.'));
+            } else {
+                const ta = document.createElement('textarea'); ta.value = textToCopy;
+                ta.style.position = 'fixed'; ta.style.left = '-9999px';
+                document.body.appendChild(ta); ta.select();
+                try { document.execCommand('copy'); setCopyButtonText('Tersalin!'); setTimeout(() => setCopyButtonText('Salin Nilai'), 2000); }
+                catch(e) { alert('Gagal menyalin data.'); }
+                document.body.removeChild(ta);
+            }
+        };
+
+        const hitungRataRataSiswa = (nilaiKonvert) => {
+            const validNilai = nilaiKonvert.filter(n => n > 0);
+            if (validNilai.length === 0) return 0;
+            return (validNilai.reduce((a, b) => a + b, 0) / validNilai.length).toFixed(1);
+        };
+
+        const exportToCSV = () => {
+            let csv = 'No Absen,' + Array.from({ length: jumlahKolom }, (_, i) => 'Nilai Asli ' + (i + 1)).join(',') + ',' + Array.from({ length: jumlahKolom }, (_, i) => 'Nilai Konvert ' + (i + 1)).join(',') + ',Rata-rata\n';
+            dataSiswa.forEach(siswa => {
+                const rataRata = hitungRataRataSiswa(siswa.nilaiKonvert);
+                csv += siswa.noAbsen + ',' + siswa.nilaiAsli.join(',') + ',' + siswa.nilaiKonvert.join(',') + ',' + rataRata + '\n';
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'nilai_konvert.csv'; a.click();
+            window.URL.revokeObjectURL(url);
+        };
+
+        const getStats = () => {
+            const allNilaiKonvert = dataSiswa.flatMap(s => s.nilaiKonvert).filter(n => n > 0);
+            if (allNilaiKonvert.length === 0) return { avg: 0, max: 0, min: 0, aboveKKM: 0 };
+            const avg = allNilaiKonvert.reduce((a, b) => a + b, 0) / allNilaiKonvert.length;
+            const max = Math.max(...allNilaiKonvert);
+            const min = Math.min(...allNilaiKonvert);
+            const aboveKKM = allNilaiKonvert.filter(n => n >= kkm).length;
+            return { avg, max, min, aboveKKM };
+        };
+
+        const stats = getStats();
+
+        const getAverageCellClasses = (rowIndex) => {
+            const rankInfo = studentRanks.get(rowIndex);
+            if (!rankInfo) return 'bg-gray-50 text-gray-700';
+
+            const { group, rank } = rankInfo;
+            const greenGradients = ['bg-gradient-to-r from-green-300 to-green-400', 'bg-gradient-to-r from-green-200 to-green-300', 'bg-gradient-to-r from-green-100 to-green-200', 'bg-gradient-to-r from-green-50 to-green-100', 'bg-gradient-to-r from-green-50 to-green-100'];
+            const yellowGradients = ['bg-gradient-to-r from-yellow-300 to-yellow-400', 'bg-gradient-to-r from-yellow-200 to-yellow-300', 'bg-gradient-to-r from-yellow-100 to-yellow-200', 'bg-gradient-to-r from-yellow-50 to-yellow-100', 'bg-gradient-to-r from-yellow-50 to-yellow-100'];
+            const redGradients = ['bg-gradient-to-r from-red-300 to-red-400', 'bg-gradient-to-r from-red-200 to-red-300', 'bg-gradient-to-r from-red-100 to-red-200', 'bg-gradient-to-r from-red-50 to-red-100', 'bg-gradient-to-r from-red-50 to-red-100'];
+
+            let bg = '';
+            if (group === 'top5') bg = greenGradients[rank - 1];
+            else if (group === 'next5') bg = yellowGradients[rank - 1];
+            else if (group === 'bottom5') bg = redGradients[rank - 1];
+
+            return bg + ' text-gray-800 font-semibold';
+        };
+
+        /* ========== RENDER ========== */
+        return html`
+            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col">
+                <div className="flex-grow pb-20">
+                    <div className="max-w-7xl mx-auto p-4">
+
+                        <!-- Header Card -->
+                        <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center space-x-3">
+                                    <div className="bg-indigo-600 p-3 rounded-xl"><${Calculator} /></div>
+                                    <div><h1 className="text-3xl font-bold text-gray-800">Ongga App</h1></div>
+                                </div>
+                            </div>
+
+                            <!-- Petunjuk -->
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                                <div className="flex items-start space-x-2">
+                                    <${Info} />
+                                    <div className="text-sm text-blue-800">
+                                        <p className="font-semibold mb-1">Petunjuk Penggunaan:</p>
+                                        <ol className="list-decimal list-inside space-y-1">
+                                            <li>Isikan Nilai Terbesar yang diinginkan</li>
+                                            <li>Isikan KKM atau nilai terkecil yang diinginkan</li>
+                                            <li>Tambahkan atau kurangi kolom nilai dengan tombol "Tambah" atau "Kurang"</li>
+                                            <li>Pastekan nilai asli pada kolom Nilai Asli (bisa paste multiple cells)</li>
+                                            <li>Aplikasi akan otomatis mendeteksi nilai minimum dan maksimum per kolom</li>
+                                            <li>Nilai minimum akan dikonversi ke KKM, nilai maksimum ke nilai terbesar</li>
+                                            <li>Hasil konversi akan muncul otomatis pada kolom Nilai Konvert</li>
+                                            <li>Kolom Rata-rata akan diberi warna background gradasi untuk menandai peringkat.</li>
+                                            <li><strong>Tombol "Salin Nilai" sekarang hanya menyalin baris yang ada nilainya.</strong></li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Input Settings -->
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Nilai Terbesar yang diinginkan</label>
+                                    <input type="number" value=${maxNilai} onInput=${(e) => setMaxNilai(parseFloat(e.target.value) || 0)}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="Masukkan nilai maksimum" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">KKM (nilai terkecil yang diinginkan)</label>
+                                    <input type="number" value=${kkm} onInput=${(e) => setKkm(parseFloat(e.target.value) || 0)}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="Masukkan KKM" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Jumlah Kolom Nilai</label>
+                                    <div className="flex items-center space-x-2">
+                                        <button onClick=${() => setJumlahKolom(prev => Math.max(1, prev - 1))}
+                                            className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center justify-center transition-colors" title="Kurangi Kolom">
+                                            <${Minus} />
+                                        </button>
+                                        <input type="number" value=${jumlahKolom} readOnly className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-center" />
+                                        <button onClick=${() => setJumlahKolom(prev => prev + 1)}
+                                            className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg flex items-center justify-center transition-colors" title="Tambah Kolom">
+                                            <${Plus} />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Statistik Per Kolom -->
+                            <div className="mb-6">
+                                <h3 className="text-sm font-medium text-gray-700 mb-2">Statistik Per Kolom (Otomatis Terdeteksi):</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-2">
+                                    ${kolomStats.map((stat, index) => html`
+                                        <div key=${index} className="bg-gray-50 rounded-lg p-2 text-xs">
+                                            <div className="font-semibold text-gray-700">Kolom ${index + 1}</div>
+                                            <div className="text-gray-600">Min: ${stat.min !== null ? stat.min.toFixed(1) : '-'} | Max: ${stat.max !== null ? stat.max.toFixed(1) : '-'}</div>
+                                        </div>
+                                    `)}
+                                </div>
+                            </div>
+
+                            <!-- Statistics Cards -->
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-4 text-white">
+                                    <p className="text-sm opacity-90">Rata-rata</p>
+                                    <p className="text-2xl font-bold">${stats.avg.toFixed(2)}</p>
+                                </div>
+                                <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-4 text-white">
+                                    <p className="text-sm opacity-90">Tertinggi</p>
+                                    <p className="text-2xl font-bold">${stats.max.toFixed(2)}</p>
+                                </div>
+                                <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-4 text-white">
+                                    <p className="text-sm opacity-90">Terendah</p>
+                                    <p className="text-2xl font-bold">${stats.min.toFixed(2)}</p>
+                                </div>
+                                <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg p-4 text-white">
+                                    <p className="text-sm opacity-90">≥ KKM</p>
+                                    <p className="text-2xl font-bold">${stats.aboveKKM}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div className="bg-white rounded-2xl shadow-xl p-4 mb-4 flex justify-end space-x-2">
+                            <button onClick=${resetData} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg flex items-center space-x-2 transition-colors">
+                                <${RotateCcw} /><span>Reset</span>
+                            </button>
+                            <button onClick=${salinNilaiKonvert} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg flex items-center space-x-2 transition-colors">
+                                <${Upload} /><span>${copyButtonText}</span>
+                            </button>
+                            <button onClick=${exportToCSV} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center space-x-2 transition-colors">
+                                <${Download} /><span>Export CSV</span>
+                            </button>
+                        </div>
+
+                        <!-- Table -->
+                        <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-6">
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead className="bg-gray-50 border-b-2 border-gray-200">
+                                        <tr>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky-col left-0 bg-gray-50">No Absen</th>
+                                            <th colSpan=${jumlahKolom} className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-blue-50">Nilai Asli (paste disini)</th>
+                                            <th colSpan=${jumlahKolom + 1} className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-green-50">Nilai Konvert</th>
+                                        </tr>
+                                        <tr>
+                                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky-col left-0 bg-gray-50"></th>
+                                            ${Array.from({ length: jumlahKolom }, (_, i) => html`
+                                                <th key=${'asli-' + i} className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-blue-50">${i + 1}</th>
+                                            `)}
+                                            ${Array.from({ length: jumlahKolom }, (_, i) => html`
+                                                <th key=${'konvert-' + i} className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-green-50">${i + 1}</th>
+                                            `)}
+                                            <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-green-50">Rata-rata</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                        ${dataSiswa.map((siswa, rowIndex) => {
+                                            const rataRata = hitungRataRataSiswa(siswa.nilaiKonvert);
+                                            const rataRataValue = parseFloat(rataRata);
+                                            const averageCellClasses = getAverageCellClasses(rowIndex);
+
+                                            return html`
+                                                <tr key=${rowIndex} className="hover:bg-gray-50 transition-colors">
+                                                    <td className="px-4 py-2 text-sm font-medium text-gray-900 sticky-col left-0 bg-white">${siswa.noAbsen}</td>
+                                                    ${siswa.nilaiAsli.map((nilai, colIndex) => html`
+                                                        <td key=${'a-' + colIndex} className="px-2 py-2">
+                                                            <input type="text" value=${nilai}
+                                                                onInput=${(e) => handleNilaiAsliChange(rowIndex, colIndex, e.target.value)}
+                                                                onPaste=${(e) => handlePaste(e, rowIndex, colIndex)}
+                                                                className="w-full px-2 py-1 text-center border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="" />
+                                                        </td>
+                                                    `)}
+                                                    ${siswa.nilaiKonvert.map((nilai, colIndex) => html`
+                                                        <td key=${'k-' + colIndex} className="px-2 py-2">
+                                                            <div className="w-full px-2 py-1 text-center bg-gray-50 rounded font-medium text-gray-700">${nilai > 0 ? nilai : ''}</div>
+                                                        </td>
+                                                    `)}
+                                                    <td className="px-2 py-2">
+                                                        <div className=${'w-full px-2 py-1 text-center rounded-md ' + averageCellClasses}>${rataRataValue > 0 ? rataRata : ''}</div>
+                                                    </td>
+                                                </tr>
+                                            `;
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Fixed Footer -->
+                <footer className="bg-white border-t border-gray-200 py-4 fixed bottom-0 left-0 right-0 z-20">
+                    <div className="text-center text-sm text-gray-600">
+                        @2025 Pengembang <strong><a href="https://agungjnugraha.github.io/portofolio" target="_blank" rel="noopener noreferrer" title="ajnugraha app" className="text-indigo-600 hover:underline">AJ Nugraha</a></strong>
+                    </div>
+                </footer>
+            </div>
+        `;
+    }
+
+    /* ========== APP ROOT ========== */
+    function App() {
+        const [isLoggedIn, setIsLoggedIn] = useState(false);
+        if (!isLoggedIn) return html`<${LoginPage} onLogin=${() => setIsLoggedIn(true)} />`;
+        return html`<${AppContent} />`;
+    }
+
+    ReactDOM.render(html`<${App} />`, document.getElementById('root'));
+    </script>
+</body>
+</html>
